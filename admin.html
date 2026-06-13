@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>老东北 · 后台管理</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f0a04;
+      --surface:  #1a1108;
+      --border:   rgba(216,177,106,0.15);
+      --gold:     #D8B16A;
+      --gold-dim: rgba(216,177,106,0.5);
+      --cream:    #f0e6d0;
+      --muted:    rgba(240,230,208,0.45);
+      --red:      #b32722;
+      --green:    #2a7a4f;
+      --blue:     #1a4a7a;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: 'Noto Serif SC', serif;
+      min-height: 100vh;
+    }
+
+    /* ── LOGIN ── */
+    #loginScreen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .login-logo {
+      font-family: 'EB Garamond', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .login-title {
+      font-size: 1.6rem;
+      color: var(--gold);
+      margin-bottom: 2rem;
+      font-weight: 400;
+    }
+    .login-input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--cream);
+      padding: 0.85rem 1rem;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .login-input:focus { border-color: var(--gold-dim); }
+    .login-btn {
+      width: 100%;
+      background: var(--gold);
+      color: #0f0a04;
+      border: none;
+      padding: 0.9rem;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: opacity 0.2s;
+    }
+    .login-btn:hover { opacity: 0.85; }
+    .login-err { color: #e74c3c; font-size: 0.82rem; margin-top: 0.75rem; display: none; }
+
+    /* ── ADMIN UI ── */
+    #adminScreen { display: none; }
+
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand {
+      font-family: 'EB Garamond', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.25em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+    }
+    .topbar-title {
+      font-size: 1.05rem;
+      color: var(--gold);
+      font-weight: 400;
+    }
+    .topbar-right { display: flex; gap: 1rem; align-items: center; }
+    .topbar-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.4rem 0.9rem;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .topbar-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+    .main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.4rem 1.5rem;
+    }
+    .stat-label {
+      font-family: 'EB Garamond', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .stat-value {
+      font-size: 1.8rem;
+      color: var(--gold);
+      font-weight: 400;
+    }
+    .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* ── FILTERS ── */
+    .toolbar {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.4rem 1rem;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      border-color: var(--gold-dim);
+      color: var(--gold);
+      background: rgba(216,177,106,0.07);
+    }
+    .refresh-btn {
+      margin-left: auto;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.4rem 1rem;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .refresh-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+    /* ── ORDERS TABLE ── */
+    .orders-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead {
+      background: rgba(216,177,106,0.06);
+    }
+    th {
+      font-family: 'EB Garamond', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      text-align: left;
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid rgba(216,177,106,0.07);
+      font-size: 0.88rem;
+      color: var(--cream);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(216,177,106,0.03); }
+
+    .order-name { font-weight: 600; color: var(--gold); }
+    .order-items { color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
+    .order-total { font-weight: 600; color: var(--cream); }
+    .order-delivery {
+      font-size: 0.72rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 2px;
+      letter-spacing: 0.05em;
+    }
+    .delivery-true { background: rgba(26,74,122,0.3); color: #7ab3e0; border: 1px solid rgba(122,179,224,0.3); }
+    .delivery-false { background: rgba(42,122,79,0.25); color: #7fd4a4; border: 1px solid rgba(127,212,164,0.3); }
+    .order-addr { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+    .order-note { font-size: 0.78rem; color: var(--muted); font-style: italic; }
+    .order-time { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+
+    /* Status badge + select */
+    .status-select {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--cream);
+      padding: 0.3rem 0.5rem;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.78rem;
+      cursor: pointer;
+      outline: none;
+      border-radius: 2px;
+    }
+    .status-select.pending  { border-color: rgba(230,180,50,0.5); color: #e6b432; }
+    .status-select.confirmed { border-color: rgba(42,122,79,0.6); color: #7fd4a4; }
+    .status-select.delivered { border-color: rgba(216,177,106,0.4); color: var(--gold); }
+    .status-select.cancelled { border-color: rgba(179,39,34,0.5); color: #e74c3c; }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+      font-family: 'EB Garamond', serif;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gold-dim);
+      font-size: 0.88rem;
+      letter-spacing: 0.1em;
+    }
+
+    @media (max-width: 700px) {
+      .main { padding: 1rem; }
+      .topbar { padding: 0.8rem 1rem; }
+      th, td { padding: 0.7rem 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">Lao Dong Bei · Food Service</div>
+    <div class="login-title">后台管理</div>
+    <input id="pwInput" class="login-input" type="password" placeholder="请输入管理密码" onkeydown="if(event.key==='Enter')login()"/>
+    <button class="login-btn" onclick="login()">登 录</button>
+    <div class="login-err" id="loginErr">密码错误，请重试</div>
+  </div>
+</div>
+
+<!-- ── ADMIN ── -->
+<div id="adminScreen">
+  <div class="topbar">
+    <div>
+      <div class="topbar-brand">Lao Dong Bei · Food Service</div>
+      <div class="topbar-title">后台管理</div>
+    </div>
+    <div class="topbar-right">
+      <span id="lastUpdated" style="font-size:0.72rem;color:var(--muted);letter-spacing:0.05em;"></span>
+      <button class="topbar-btn" onclick="logout()">退出登录</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">今日订单</div>
+        <div class="stat-value" id="statToday">—</div>
+        <div class="stat-sub">笔</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">今日收入</div>
+        <div class="stat-value" id="statRevToday">—</div>
+        <div class="stat-sub">美元</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">总订单</div>
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-sub">笔</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">总收入</div>
+        <div class="stat-value" id="statRevTotal">—</div>
+        <div class="stat-sub">美元</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">待确认</div>
+        <div class="stat-value" id="statPending">—</div>
+        <div class="stat-sub">笔</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">送餐订单</div>
+        <div class="stat-value" id="statDelivery">—</div>
+        <div class="stat-sub">笔</div>
+      </div>
+    </div>
+
+    <div id="ordersSection">
+    <!-- Filters -->
+    <div class="toolbar">
+      <button class="filter-btn active" onclick="setFilter('all', this)">全部</button>
+      <button class="filter-btn" onclick="setFilter('pending', this)">待确认</button>
+      <button class="filter-btn" onclick="setFilter('confirmed', this)">已确认</button>
+      <button class="filter-btn" onclick="setFilter('delivered', this)">已完成</button>
+      <button class="filter-btn" onclick="setFilter('cancelled', this)">已取消</button>
+      <button class="filter-btn" id="menuTabBtn" onclick="showTab('menu')" style="margin-left:auto;">🍽 管理菜单</button>
+      <button class="refresh-btn" id="ordersTabBtn" onclick="showTab('orders')" style="display:none;">← 返回订单</button>
+    </div>
+
+    <!-- Orders -->
+    <div class="orders-wrap">
+      <div id="ordersLoading" class="loading">加载中...</div>
+      <table id="ordersTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>姓名</th>
+            <th>菜品</th>
+            <th>金额</th>
+            <th>取送</th>
+            <th>备注</th>
+            <th>时间</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody id="ordersBody"></tbody>
+      </table>
+      <div id="ordersEmpty" class="empty" style="display:none;">暂无订单</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://vpdnzlfsdlsnrspsvyfu.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwZG56bGZzZGxzbnJzcHN2eWZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODk3MDEsImV4cCI6MjA5Njg2NTcwMX0.FjVVVKTpYTGxEhD_1OlofMSfo5N7qGAy0-1HZVSQklQ';
+  const ADMIN_PASSWORD = 'ldbfs2026';
+
+  let allOrders = [];
+  let currentFilter = 'all';
+
+  // ── AUTH ──
+  function login() {
+    const pw = document.getElementById('pwInput').value;
+    if (pw === ADMIN_PASSWORD) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminScreen').style.display = 'block';
+      loadOrders();
+      // Auto-refresh every 60s
+      setInterval(loadOrders, 60000);
+    } else {
+      document.getElementById('loginErr').style.display = 'block';
+    }
+  }
+
+  function logout() {
+    document.getElementById('adminScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('pwInput').value = '';
+  }
+
+  // ── FILTER ──
+  function setFilter(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderOrders();
+  }
+
+  // ── LOAD ORDERS ──
+  async function loadOrders() {
+    try {
+      const res = await fetch(
+        SUPABASE_URL + '/rest/v1/Orders?order=created_at.desc&limit=200',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+      );
+      allOrders = await res.json();
+      renderOrders();
+      updateStats();
+      document.getElementById('lastUpdated').textContent =
+        '更新于 ' + new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+    } catch(e) {
+      document.getElementById('ordersLoading').textContent = '加载失败，请刷新重试';
+    }
+  }
+
+  // ── RENDER ORDERS ──
+  function renderOrders() {
+    const filtered = currentFilter === 'all'
+      ? allOrders
+      : allOrders.filter(o => o.status === currentFilter);
+
+    document.getElementById('ordersLoading').style.display = 'none';
+
+    if (filtered.length === 0) {
+      document.getElementById('ordersTable').style.display = 'none';
+      document.getElementById('ordersEmpty').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('ordersEmpty').style.display = 'none';
+    document.getElementById('ordersTable').style.display = 'table';
+
+    const tbody = document.getElementById('ordersBody');
+    tbody.innerHTML = filtered.map(o => {
+      const time = o.created_at
+        ? new Date(o.created_at).toLocaleString('zh-CN', {
+            timeZone: 'America/Los_Angeles',
+            month: 'numeric', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          })
+        : '—';
+
+      const deliveryTag = o.delivery
+        ? '<span class="order-delivery delivery-true">送餐</span>'
+        : '<span class="order-delivery delivery-false">取餐</span>';
+
+      const addrLine = o.delivery && o.address
+        ? `<div class="order-addr">📍 ${o.address}</div>` : '';
+
+      const noteLine = o.note
+        ? `<div class="order-note">备注：${o.note}</div>` : '';
+
+      const statusClass = o.status || 'pending';
+      const statusOptions = ['pending','confirmed','delivered','cancelled'];
+      const statusLabel = { pending:'待确认', confirmed:'已确认', delivered:'已完成', cancelled:'已取消' };
+
+      const select = `<select class="status-select ${statusClass}" onchange="updateStatus(${o.id}, this)">
+        ${statusOptions.map(s => `<option value="${s}" ${o.status===s?'selected':''}>${statusLabel[s]}</option>`).join('')}
+      </select>`;
+
+      const items = (o.orders || '').split('\n').join('<br>');
+
+      return `<tr>
+        <td><div class="order-name">${o.name || '—'}</div></td>
+        <td><div class="order-items">${items || '—'}</div></td>
+        <td><div class="order-total">$${o.total || 0}</div></td>
+        <td>${deliveryTag}${addrLine}</td>
+        <td>${noteLine || '<span style="color:var(--muted);font-size:0.78rem;">无</span>'}</td>
+        <td><div class="order-time">${time}</div></td>
+        <td>${select}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── UPDATE STATUS ──
+  async function updateStatus(id, sel) {
+    const newStatus = sel.value;
+    sel.className = 'status-select ' + newStatus;
+    try {
+      await fetch(SUPABASE_URL + '/rest/v1/Orders?id=eq.' + id, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      // Update local data
+      const order = allOrders.find(o => o.id === id);
+      if (order) order.status = newStatus;
+      updateStats();
+    } catch(e) {
+      alert('更新失败，请重试');
+    }
+  }
+
+  // ── STATS ──
+  function updateStats() {
+    const today = new Date().toLocaleDateString('en-CA', {timeZone: 'America/Los_Angeles'});
+    const todayOrders = allOrders.filter(o => {
+      if (!o.created_at) return false;
+      return new Date(o.created_at).toLocaleDateString('en-CA', {timeZone:'America/Los_Angeles'}) === today;
+    });
+
+    document.getElementById('statToday').textContent = todayOrders.length;
+    document.getElementById('statRevToday').textContent =
+      '$' + todayOrders.reduce((s,o) => s + (parseFloat(o.total)||0), 0).toFixed(0);
+    document.getElementById('statTotal').textContent = allOrders.length;
+    document.getElementById('statRevTotal').textContent =
+      '$' + allOrders.reduce((s,o) => s + (parseFloat(o.total)||0), 0).toFixed(0);
+    document.getElementById('statPending').textContent =
+      allOrders.filter(o => o.status === 'pending').length;
+    document.getElementById('statDelivery').textContent =
+      allOrders.filter(o => o.delivery === true).length;
+  }
+
+  // ── TABS ──
+  function showTab(tab) {
+    if (tab === 'menu') {
+      document.getElementById('ordersSection').style.display = 'none';
+      document.getElementById('menuSection').style.display = 'block';
+      document.getElementById('menuTabBtn').style.display = 'none';
+      document.getElementById('ordersTabBtn').style.display = 'inline-block';
+      loadMenuItems();
+    } else {
+      document.getElementById('menuSection').style.display = 'none';
+      document.getElementById('ordersSection').style.display = 'block';
+      document.getElementById('menuTabBtn').style.display = 'inline-block';
+      document.getElementById('ordersTabBtn').style.display = 'none';
+    }
+  }
+
+  // ── MENU ITEMS ──
+  let menuItems = [];
+
+  async function loadMenuItems() {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/menu_items?order=id.asc', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    menuItems = await res.json();
+    renderMenuItems();
+  }
+
+  function renderMenuItems() {
+    const tbody = document.getElementById('menuBody');
+    if (!menuItems.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">暂无菜品</td></tr>';
+      return;
+    }
+    tbody.innerHTML = menuItems.map(item => `
+      <tr>
+        <td><strong style="color:var(--gold)">${item.name_cn}</strong><br><span style="color:var(--muted);font-size:0.78rem;">${item.name_en||''}</span></td>
+        <td>${item.category === 'lunch' ? '午餐' : '晚餐单点'}</td>
+        <td>${item.price > 0 ? '$'+item.price : '套餐价'}</td>
+        <td style="font-size:0.78rem;color:var(--muted)">${item.description||'—'}</td>
+        <td>
+          <select class="status-select ${item.available ? 'confirmed' : 'cancelled'}"
+            onchange="toggleAvailable(${item.id}, this.value==='true')">
+            <option value="true" ${item.available?'selected':''}>上架</option>
+            <option value="false" ${!item.available?'selected':''}>下架</option>
+          </select>
+        </td>
+        <td>
+          <button onclick="deleteItem(${item.id})" style="background:transparent;border:1px solid rgba(179,39,34,0.4);color:#e74c3c;padding:0.3rem 0.7rem;cursor:pointer;font-size:0.75rem;font-family:inherit;">删除</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function toggleAvailable(id, val) {
+    await fetch(SUPABASE_URL + '/rest/v1/menu_items?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ available: val })
+    });
+    await loadMenuItems();
+  }
+
+  async function deleteItem(id) {
+    if (!confirm('确定删除这道菜？')) return;
+    await fetch(SUPABASE_URL + '/rest/v1/menu_items?id=eq.' + id, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    await loadMenuItems();
+  }
+
+  async function addMenuItem() {
+    const name_cn = document.getElementById('newNameCn').value.trim();
+    const name_en = document.getElementById('newNameEn').value.trim();
+    const price = parseFloat(document.getElementById('newPrice').value) || 0;
+    const category = document.getElementById('newCategory').value;
+    const description = document.getElementById('newDesc').value.trim();
+    if (!name_cn) { alert('请填写中文菜名'); return; }
+    await fetch(SUPABASE_URL + '/rest/v1/menu_items', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ name_cn, name_en, price, category, description, available: true })
+    });
+    document.getElementById('newNameCn').value = '';
+    document.getElementById('newNameEn').value = '';
+    document.getElementById('newPrice').value = '';
+    document.getElementById('newDesc').value = '';
+    await loadMenuItems();
+  }
+
+</script>
+</body>
+</html>
